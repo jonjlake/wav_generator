@@ -1,7 +1,13 @@
 #include "C:\\CPP\\wav_writer\\wav_writer.h"
+#include "wav_generator.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+/*#define A4 440
+#define C5 523.2511
+#define E5 659.2551
+#define A5 880
+*/
 void assign_header_info(WaveFile *p_wavefile, int num_channels, int num_samples, double dt)
 {
 	p_wavefile->num_frames = num_samples;
@@ -35,6 +41,7 @@ void generate_stereo_sine(WaveFile *p_wavefile, short A, double f, double dt, do
 	int num_channels = 2;
 
 	p_wavefile->channel_samples = (short **)calloc(num_channels, sizeof(*p_wavefile->channel_samples));
+//	p_wavefile->channel_samples = (short **)calloc(num_channels, sizeof(short *));
 
 	for (i = 0; i < num_channels; i++)
 	{
@@ -62,18 +69,25 @@ void generate_double_sine(WaveFile *p_wavefile, short A1, short A2, double f1, d
 	int i, j;
 //	int num_channels = 2;
 
+	printf("Generating double sine\n");
+
 	p_wavefile->channel_samples = (short **)calloc(num_channels, sizeof(*p_wavefile->channel_samples));
 
 	for (i = 0; i < num_channels; i++)
 	{
+//		printf("Generating %d samples for channel %d\n", num_samples, i);
 		p_wavefile->channel_samples[i] = (short *)calloc(num_samples, sizeof(**p_wavefile->channel_samples));
+//		p_wavefile->channel_samples[i] = (short *)calloc(num_samples, sizeof(short));
+//		printf("Allocated memory for channel %d\n", i);
 		for (j = 0; j < num_samples; j++)
 		{
+//			printf("Generating sample %d\n", j);
 			p_wavefile->channel_samples[i][j] = A1 * sin(2.0 * M_PI * f1 * j * dt + ph) +
 				A2 * sin(2.0 * M_PI * f2 * j * dt + ph);
 		}
 	}
 
+	printf("Assigning header info\n");
 	assign_header_info(p_wavefile, num_channels, num_samples, dt);
 }
 
@@ -96,7 +110,9 @@ int main()
 //	generate_stereo_sine(&wavefile, 2000, 440, 2.2727e-4, 0, 1760);
 //	generate_stereo_sine_wrapper(&wavefile, 2000, 880, 5, 8800);
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, 440, 880, 5, 8800, 2);
-	generate_double_sine_wrapper(&wavefile, 1000, 1000, 440, 880, 2, 8800, 1);
+//	generate_double_sine_wrapper(&wavefile, 1000, 1000, 440, 880, 2, 8800, 1);
+//	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, A5, 2, A5*10, 1);
+	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, C5, 2, C5*10, 1);
 
 	print_header(wavefile);
 	write_wave(wavefile, output_filename);
