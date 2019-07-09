@@ -112,7 +112,8 @@ int main()
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, 440, 880, 5, 8800, 2);
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, 440, 880, 2, 8800, 1);
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, A5, 2, A5*10, 1);
-	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, C5, 2, C5*10, 1);
+//	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, C5, 2, C5*10, 1);
+	generate_double_sine_wrapper(&wavefile, 1000, 1000, C5, Ef5, 2, Ef5*10, 1);
 
 	print_header(wavefile);
 	write_wave(wavefile, output_filename);
