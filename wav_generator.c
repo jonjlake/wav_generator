@@ -2,6 +2,7 @@
 #include "wav_generator.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <stdarg.h>
 
 /*#define A4 440
 #define C5 523.2511
@@ -99,6 +100,64 @@ void generate_double_sine_wrapper(WaveFile *p_wavefile, short A1, short A2, doub
 	generate_double_sine(p_wavefile, A1, A2, f1, f2, dt, 0, num_samples, num_channels);
 }
 
+void generate_generic_sine(WaveFile *p_wavefile, short Ai, double dt, double ph, int num_samples, int num_channels, double frequency, int freq_count)
+{
+//	va_list args;
+//	va_start(args, num_frequencies);
+//	double frequency;
+	int i,j,k;
+
+//	short Ai = A_net / num_frequencies; // Should this be weighted differently?
+
+	if (0 == freq_count)
+		p_wavefile->channel_samples = (short **)calloc(num_channels, sizeof(*p_wavefile->channel_samples));
+
+	printf("Frequency: %f\n", frequency);
+#if 1
+	for (i = 0; i < num_channels; i++)
+	{
+		printf("Channel %d\n", i);
+		if (0 == freq_count)
+			p_wavefile->channel_samples[i] = (short *)calloc(num_samples, sizeof(**p_wavefile->channel_samples));
+		for (j = 0; j < num_samples; j++)
+		{
+//			printf("Sample %d\n", j);
+//			for (k = 0; k < num_samples; k++)
+//			{
+//				frequency = va_arg(args, double);
+			p_wavefile->channel_samples[i][j] += Ai * sin(2.0 * M_PI * frequency * j * dt + ph);
+//			}
+		}
+	}
+#endif
+}
+
+void generate_generic_sine_wrapper(WaveFile *p_wavefile, short A_net, double duration, double sample_freq, 
+		int num_channels, int num_frequencies, ...)
+{
+	va_list args;
+	double dt = 1.0 / sample_freq;
+	int num_samples = duration / dt;
+	
+	short Ai = A_net / num_frequencies; // Should this be weighted differently?
+
+	double frequency;
+	double ph = 0;
+
+	int i;
+	va_start(args, num_frequencies);
+	for (i = 0; i < num_frequencies; i++)
+	{
+		frequency = va_arg(args, double);
+//		printf("outer frequency: %f\n", frequency);
+		generate_generic_sine(p_wavefile, Ai, dt, ph, num_samples, num_channels, frequency, i);
+	}
+	va_end(args);
+
+	printf("Assigning header info\n");
+	assign_header_info(p_wavefile, num_channels, num_samples, dt);
+}
+
 int main()
 {
 	char output_filename[128] = "output_test.wav";
@@ -113,7 +172,12 @@ int main()
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, 440, 880, 2, 8800, 1);
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, A5, 2, A5*10, 1);
 //	generate_double_sine_wrapper(&wavefile, 1000, 1000, A4, C5, 2, C5*10, 1);
-	generate_double_sine_wrapper(&wavefile, 1000, 1000, C5, Ef5, 2, Ef5*10, 1);
+//	generate_double_sine_wrapper(&wavefile, 1000, 1000, C5, Ef5, 2, Ef5*10, 1);
+
+//	generate_generic_sine_wrapper(&wavefile, 3000, 2, 880, 2, 4, 220.0, 440.0, 880.0, 1000.0);
+//	generate_generic_sine_wrapper(&wavefile, 4000, 2, 880.0 * 2.0, 2, 2, 440.0, 880.0);
+//	generate_generic_sine_wrapper(&wavefile, 3000, 2, 880.0 * 10, 1, 2, 440.0, 880.0);
+	generate_generic_sine_wrapper(&wavefile, 3000, 2, G5 * 10, 1, 3, C5, Ef5, G5);
 
 	print_header(wavefile);
 	write_wave(wavefile, output_filename);
