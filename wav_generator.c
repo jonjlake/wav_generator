@@ -158,10 +158,52 @@ void generate_generic_sine_wrapper(WaveFile *p_wavefile, short A_net, double dur
 	assign_header_info(p_wavefile, num_channels, num_samples, dt);
 }
 
+typedef struct FreqAmp
+{
+	double frequency;
+	double amplitude;
+} FreqAmp;
+
+void generate_generic_sine_wrapper_multi_amp(WaveFile *p_wavefile, double duration, double sample_freq, 
+		int num_channels, int num_frequencies, ...)
+{
+	va_list args;
+	double dt = 1.0 / sample_freq;
+	int num_samples = duration / dt;
+
+	double ph = 0;
+	FreqAmp freq_weight = { 0 };
+
+	int i;
+	va_start(args, num_frequencies);
+	for (i = 0; i < num_frequencies; i++)
+	{
+		freq_weight = va_arg(args, FreqAmp);
+		generate_generic_sine(p_wavefile, freq_weight.amplitude, dt, ph, num_samples, num_channels,
+				freq_weight.frequency, i);
+	}
+	va_end(args);
+
+	printf("Assigning header info\n");
+	assign_header_info(p_wavefile, num_channels, num_samples, dt);
+}
+
+
 int main()
 {
 	char output_filename[128] = "output_test.wav";
 	WaveFile wavefile = { 0 };
+
+	FreqAmp freq_weight[8] = {
+		{419.04,840.8858},
+		{838.24, 1533.618}, 
+		{1257.12, 167.1285},
+	       	{1676.64, 122.6765}, 
+		{2095.68, 88.09782},
+		{2514.88, 155.0136}, 
+		{2933.76, 62.45731}, 
+		{3353.18, 30.12254}
+	};
 
 	printf("Generating a stereo sine wave\n");
 //	generate_stereo_sine(&wavefile, 2000, 440, 0.0045, 0, 880);
@@ -177,7 +219,11 @@ int main()
 //	generate_generic_sine_wrapper(&wavefile, 3000, 2, 880, 2, 4, 220.0, 440.0, 880.0, 1000.0);
 //	generate_generic_sine_wrapper(&wavefile, 4000, 2, 880.0 * 2.0, 2, 2, 440.0, 880.0);
 //	generate_generic_sine_wrapper(&wavefile, 3000, 2, 880.0 * 10, 1, 2, 440.0, 880.0);
-	generate_generic_sine_wrapper(&wavefile, 3000, 2, G5 * 10, 1, 3, C5, Ef5, G5);
+//	generate_generic_sine_wrapper(&wavefile, 3000, 2, G5 * 10, 1, 3, C5, Ef5, G5);
+
+	generate_generic_sine_wrapper_multi_amp(&wavefile, 2, 3353.28*10.0, 1, 8, freq_weight[0], 
+			freq_weight[1], freq_weight[2], freq_weight[3], freq_weight[4], freq_weight[5],
+			freq_weight[6], freq_weight[7]);
 
 	print_header(wavefile);
 	write_wave(wavefile, output_filename);
